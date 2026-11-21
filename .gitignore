@@ -1,0 +1,10 @@
+# Working temporary files (must never be uploaded to repository)
+Temp/
+/Temp/
+
+# OS & editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.bak

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Whack-Shiki｜神山识打地鼠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- 顶部 HUD 信息栏 -->
+    <header class="hud-bar" aria-label="游戏状态栏">
+      <div class="hud-brand">
+        <span class="brand-badge">Summer Pockets</span>
+        <h1 class="brand-title">神山识打地鼠</h1>
+      </div>
+
+      <div class="hud-stats">
+        <div class="stat-pill stat-time" id="time-pill">
+          <span class="stat-label">剩余时间</span>
+          <span class="stat-value"><span id="time-value">45</span><small>s</small></span>
+        </div>
+
+        <div class="stat-pill stat-score" id="score-pill">
+          <span class="stat-label">击中 / 目标</span>
+          <span class="stat-value">
+            <span id="score-value">0</span>
+            <span class="stat-divider">/</span>
+            <span id="target-value">25</span>
+          </span>
+          <span class="goal-badge" id="goal-badge" hidden>已达标!</span>
+        </div>
+
+        <div class="stat-pill stat-combo" id="combo-pill">
+          <span class="stat-label">连击</span>
+          <span class="stat-value"><span id="combo-value">0</span><small>x</small></span>
+        </div>
+      </div>
+
+      <div class="hud-controls">
+        <button type="button" class="icon-btn" id="btn-bgm" aria-pressed="true" title="开关背景音乐">
+          <span class="btn-icon" aria-hidden="true">🎵</span>
+          <span class="btn-text">BGM 开</span>
+        </button>
+        <button type="button" class="icon-btn" id="btn-sfx" aria-pressed="true" title="开关角色语音与音效">
+          <span class="btn-icon" aria-hidden="true">🔊</span>
+          <span class="btn-text">语音 开</span>
+        </button>
+        <button type="button" class="icon-btn icon-btn-subtle" id="btn-restart" title="重新开始" hidden>
+          <span class="btn-icon" aria-hidden="true">↻</span>
+          <span class="btn-text">重开</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 核心游戏舞台 -->
+    <main class="stage-wrapper">
+      <div class="game-stage" id="game-stage" role="application" aria-label="海滩沙地打地鼠游戏区域">
+        <!-- 场景背景图 -->
+        <img
+          id="scene-bg"
+          class="scene-bg"
+          src="./assets/images/bg-beach.png"
+          alt="海滩沙地与鬼姫神山識之鎮魂碑场景"
+          draggable="false"
+        />
+
+        <!-- 9 个沙洞交互层（由 game.js 根据洞口坐标生成） -->
+        <div class="holes-layer" id="holes-layer"></div>
+
+        <!-- 打击光效与飘字层 -->
+        <div class="fx-layer" id="fx-layer" aria-hidden="true"></div>
+
+        <!-- 最后冲刺提示条 -->
+        <div class="rush-banner" id="rush-banner" aria-live="polite" hidden>最后冲刺！加速出没中！</div>
+
+        <!-- 自定义锤子光标层 -->
+        <div class="hammer-cursor" id="hammer-cursor" aria-hidden="true">
+          <img
+            id="hammer-img"
+            src="./assets/images/hammer.png"
+            alt=""
+            draggable="false"
+          />
+        </div>
+
+        <!-- 开始界面遮罩 -->
+        <section class="overlay overlay-start" id="start-overlay" aria-label="开始游戏">
+          <div class="modal-card">
+            <div class="modal-hero">
+              <img
+                class="modal-portrait"
+                src="./assets/images/shiki-normal.png"
+                alt="Q版神山识"
+                draggable="false"
+              />
+            </div>
+            <p class="modal-eyebrow">WHACK-SHIKI · 鸟白岛海滩篇</p>
+            <h2 class="modal-title">鬼姫神山识打地鼠</h2>
+            <p class="modal-desc">
+              神山识正在镇魂碑前的沙滩洞里四处乱钻！<br />
+              挥动锤子在限时内完成目标击中数即可获胜。
+            </p>
+
+            <div class="difficulty-picker" role="radiogroup" aria-label="难度选择">
+              <button type="button" class="diff-btn" data-diff="easy">
+                <strong>简单</strong>
+                <span>45秒 · 目标 18 次</span>
+              </button>
+              <button type="button" class="diff-btn is-active" data-diff="normal">
+                <strong>普通</strong>
+                <span>45秒 · 目标 25 次</span>
+              </button>
+              <button type="button" class="diff-btn" data-diff="hard">
+                <strong>困难</strong>
+                <span>45秒 · 目标 35 次</span>
+              </button>
+            </div>
+
+            <div class="best-record" id="best-record">当前难度最高纪录：0 次</div>
+
+            <button type="button" class="primary-btn" id="btn-start">
+              开始游戏
+            </button>
+            <p class="modal-tip">桌面端移动鼠标并用左键敲击；手机端直接点击钻出的神山识即可。</p>
+          </div>
+        </section>
+
+        <!-- 胜负结算弹窗 -->
+        <section class="overlay overlay-result" id="result-overlay" aria-label="游戏结算" hidden>
+          <div class="modal-card result-card" id="result-card">
+            <div class="modal-hero">
+              <img
+                id="result-portrait"
+                class="modal-portrait"
+                src="./assets/images/shiki-normal.png"
+                alt="结算角色立绘"
+                draggable="false"
+              />
+            </div>
+            <p class="modal-eyebrow" id="result-eyebrow">GAME CLEAR</p>
+            <h2 class="modal-title" id="result-title">挑战成功！</h2>
+            <p class="modal-desc" id="result-desc">成功在限定时间内达成了击中目标！</p>
+
+            <div class="result-grid">
+              <div class="result-metric">
+                <span class="metric-label">最终击中</span>
+                <strong class="metric-value" id="res-hits">0</strong>
+              </div>
+              <div class="result-metric">
+                <span class="metric-label">通关目标</span>
+                <strong class="metric-value" id="res-target">25</strong>
+              </div>
+              <div class="result-metric">
+                <span class="metric-label">最高连击</span>
+                <strong class="metric-value" id="res-max-combo">0</strong>
+              </div>
+              <div class="result-metric">
+                <span class="metric-label">命中率</span>
+                <strong class="metric-value" id="res-accuracy">0%</strong>
+              </div>
+            </div>
+
+            <div class="result-actions">
+              <button type="button" class="primary-btn" id="btn-play-again">再来一局</button>
+              <button type="button" class="secondary-btn" id="btn-back-menu">切换难度</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="./game.js"></script>
+</body>
+</html>
